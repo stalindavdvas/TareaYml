@@ -1,1 +1,26 @@
 name: make changes
+on:
+  pull_request:
+    branches:
+      - main  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@ec2-52-91-198-69.compute-1.amazonaws.com << 'EOF'
+          cd /var/www/html
+          git pull origin main
+          sudo systemctl restart nginx
+        EOF
